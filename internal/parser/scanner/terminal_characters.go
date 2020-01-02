@@ -2,9 +2,9 @@ package scanner
 
 import "github.com/tomarrell/lbadd/internal/parser/scanner/matcher"
 
-// These are terminal characters that are specified in the SQL specification.
-// The order is the same as in the specification, so single definitions are more
-// easy to find.
+import "unicode"
+
+// A terminal character that is specified in the SQL specification.
 var (
 	SQLTerminalCharacter = SQLLanguageCharacter
 	SQLLanguageCharacter = matcher.Merge(
@@ -49,7 +49,7 @@ var (
 		DollarSign,
 		Apostrophe,
 	)
-	Space               = matcher.Merge() // TODO: !! See the Syntax Rules.
+	Space               = matcher.RuneWithDesc("Space", '\u0020')
 	DoubleQuote         = matcher.RuneWithDesc("Double Quote", '"')
 	Percent             = matcher.RuneWithDesc("Percent", '%')
 	Ampersand           = matcher.RuneWithDesc("Ampersand", '&')
@@ -80,4 +80,29 @@ var (
 	RightBrace   = matcher.RuneWithDesc("Right Brace", '}')
 	DollarSign   = matcher.RuneWithDesc("Dollar Sign", '$')
 	Apostrophe   = matcher.RuneWithDesc("Apostrophe", '\'')
+)
+
+// A fragment of a lexical unit.
+var (
+	IdentifierPart = matcher.Merge(
+		IdentifierStart,
+		IdentifierExtend,
+	)
+	IdentifierStart = matcher.Merge(
+		matcher.New("Lu", unicode.Lu),
+		matcher.New("Ll", unicode.Ll),
+		matcher.New("Lt", unicode.Lt),
+		matcher.New("Lm", unicode.Lm),
+		matcher.New("Lo", unicode.Lo),
+		matcher.New("Nl", unicode.Nl),
+	)
+	IdentifierExtend = matcher.Merge(
+		matcher.RuneWithDesc("Middle Dot", '\u00b7'),
+		matcher.New("Mn", unicode.Mn),
+		matcher.New("Mc", unicode.Mc),
+		matcher.New("Nd", unicode.Nd),
+		matcher.New("Pc", unicode.Pc),
+		matcher.New("Cf", unicode.Cf),
+	)
+	Multiplier = matcher.String("KMGTP") // Kilo, Mega, Giga, Tera, Peta
 )

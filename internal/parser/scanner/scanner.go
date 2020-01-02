@@ -1,8 +1,7 @@
 package scanner
 
 import (
-	"reflect"
-	"runtime"
+	"fmt"
 
 	"github.com/tomarrell/lbadd/internal/parser/scanner/matcher"
 	"github.com/tomarrell/lbadd/internal/parser/scanner/token"
@@ -11,8 +10,32 @@ import (
 // state is a type alias for a function that takes a scanner and returns another
 // state. Such functions (or states) will be invoked by the scanner. It will
 // pass itself as the argument, and the returned state will be chained and
-// executed next.
+// executed next. If a state evaluates to nil, the initial state will be
+// chained, if the scanner has not reached the EOF yet.
+//
+// It is a state's responsibility to reset the scanner's position etc. to the
+// state they were in, when the state was entered, if the state does not
+// evaluate to nil. A state can do this by using checkpoints as shown in the
+// following example.
+//
+//	func myState(s *Scanner) state {
+//		chck := s.checkpoint()
+//		if s.accept(MyMatcher) {
+//			// maybe emit a token here
+//			return nil
+//		}
+//		s.restore(chck) // resets start, pos, line, col and the other position attributes
+//		return errorf("myerror")
+//	}
 type state func(*Scanner) state
+
+type checkpoint struct {
+	start int
+	pos   int
+
+	startLine, startCol int
+	line, lastCol, col  int
+}
 
 type Scanner struct {
 	input []rune
@@ -22,7 +45,8 @@ type Scanner struct {
 	current state
 	stream  *token.Stream
 
-	line, lastCol, col int
+	startLine, startCol int
+	line, lastCol, col  int
 }
 
 func New(input []rune, stream *token.Stream) *Scanner {
@@ -34,21 +58,36 @@ func New(input []rune, stream *token.Stream) *Scanner {
 		current: initial,
 		stream:  stream,
 
-		line:    1, // line starts at 1, because it should be human readable and editor line and column numbers usually start at 1
-		lastCol: 1,
-		col:     1, // col starts at 1, because it should be human readable and editor line and column numbers usually start at 1
+		startLine: 1,
+		startCol:  1,
+		line:      1, // line starts at 1, because it should be human readable and editor line and column numbers usually start at 1
+		lastCol:   1,
+		col:       1, // col starts at 1, because it should be human readable and editor line and column numbers usually start at 1
 	}
 }
 
 func (s *Scanner) Scan() {
-	for !s.done() {
-		nextState := s.current(s)
-		if nextState == nil {
-			panic("state '" + runtime.FuncForPC(reflect.ValueOf(s.current).Pointer()).Name() + "' evaluated to nil")
+	// EOF must be emitted after recovering from a crash, so that the parser
+	// doesn't miss the error
+	defer s.emit(token.EOF)
+
+	// recover from syntax errors that cannot be handled before EOF is emitted
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			if err, ok := recovered.(SyntaxError); ok {
+				s.stream.Push(token.New(s.line, s.col, s.pos, s.pos-s.start, token.Error, fmt.Sprintf("recovered: %v", err)))
+			} else {
+				panic(recovered) // re-panic if it's not a syntax error
+			}
 		}
-		s.current = nextState
+	}()
+
+	for !s.done() {
+		s.current = s.current(s)
+		if s.current == nil {
+			s.current = initial
+		}
 	}
-	s.emit(token.EOF)
 }
 
 func (s *Scanner) done() bool {
@@ -70,6 +109,10 @@ func (s *Scanner) next() rune {
 	return next
 }
 
+func (s *Scanner) peek() rune {
+	return s.input[s.pos]
+}
+
 func (s *Scanner) goback() {
 	s.pos--
 
@@ -82,9 +125,35 @@ func (s *Scanner) goback() {
 	}
 }
 
+func (s *Scanner) checkpoint() checkpoint {
+	return checkpoint{
+		start:     s.start,
+		pos:       s.pos,
+		startLine: s.startLine,
+		startCol:  s.startCol,
+		line:      s.line,
+		lastCol:   s.lastCol,
+		col:       s.col,
+	}
+}
+
+func (s *Scanner) restore(chck checkpoint) {
+	s.start = chck.start
+	s.pos = chck.pos
+	s.startLine = chck.startLine
+	s.startCol = chck.startCol
+	s.line = chck.line
+	s.lastCol = chck.lastCol
+	s.col = chck.col
+}
+
 func (s *Scanner) emit(t token.Type) {
 	tok := token.New(s.line, s.col, s.start, s.pos-s.start, t, string(s.input[s.start:s.pos]))
 	s.stream.Push(tok)
+
+	s.start = s.pos
+	s.startLine = s.line
+	s.startCol = s.col
 }
 
 func (s *Scanner) accept(m matcher.M) bool {
@@ -94,11 +163,31 @@ func (s *Scanner) accept(m matcher.M) bool {
 	s.goback()
 	return false
 }
-func (s *Scanner) acceptSequence(seq string) bool {
-	checkpoint := s.pos
-	for _, r := range seq {
+
+func (s *Scanner) acceptMultiple(m matcher.M) (matched uint) {
+	for s.accept(m) {
+		matched++
+	}
+	return
+}
+
+func (s *Scanner) acceptString(str string) bool {
+	chck := s.checkpoint()
+	for _, r := range str {
 		if r != s.next() {
-			s.pos = checkpoint
+			s.restore(chck)
+			return false
+		}
+	}
+	return true
+}
+
+func (s *Scanner) peekString(str string) bool {
+	chck := s.checkpoint()
+	defer s.restore(chck)
+
+	for _, r := range str {
+		if r != s.next() {
 			return false
 		}
 	}

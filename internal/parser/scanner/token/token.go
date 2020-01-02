@@ -4,6 +4,7 @@ type Token interface {
 	Positioner
 	Lengther
 	Typer
+	Valuer
 }
 
 type Positioner interface {
