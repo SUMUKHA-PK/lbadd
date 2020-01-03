@@ -2,6 +2,8 @@ package scanner
 
 import (
 	"fmt"
+	"reflect"
+	"runtime"
 
 	"github.com/tomarrell/lbadd/internal/parser/scanner/matcher"
 	"github.com/tomarrell/lbadd/internal/parser/scanner/token"
@@ -29,6 +31,10 @@ import (
 //	}
 type state func(*Scanner) state
 
+func (st state) String() string {
+	return runtime.FuncForPC(reflect.ValueOf(st).Pointer()).Name()
+}
+
 type checkpoint struct {
 	start int
 	pos   int
@@ -43,13 +49,13 @@ type Scanner struct {
 	pos   int
 
 	current state
-	stream  *token.Stream
+	stream  token.Stream
 
 	startLine, startCol int
 	line, lastCol, col  int
 }
 
-func New(input []rune, stream *token.Stream) *Scanner {
+func New(input []rune, stream token.Stream) *Scanner {
 	return &Scanner{
 		input: input,
 		start: 0,
@@ -83,11 +89,15 @@ func (s *Scanner) Scan() {
 	}()
 
 	for !s.done() {
-		s.current = s.current(s)
+		s.executeCurrentState()
 		if s.current == nil {
 			s.current = initial
 		}
 	}
+}
+
+func (s *Scanner) executeCurrentState() {
+	s.current = s.current(s)
 }
 
 func (s *Scanner) done() bool {
@@ -95,6 +105,15 @@ func (s *Scanner) done() bool {
 }
 
 func (s *Scanner) next() rune {
+	if s.done() {
+		panic(SyntaxError{
+			offset:  s.pos,
+			line:    s.line,
+			col:     s.col,
+			message: fmt.Sprintf("state '%v' tried to read another rune, but scanner already reached EOF at offset %d (%d:%d)", s.current, s.pos, s.line, s.col),
+		})
+	}
+
 	next := s.input[s.pos]
 
 	// update line and column information
@@ -105,6 +124,9 @@ func (s *Scanner) next() rune {
 	} else {
 		s.col++
 	}
+
+	// update current scanner position
+	s.pos++
 
 	return next
 }

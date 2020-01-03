@@ -1,5 +1,7 @@
 package token
 
+import "fmt"
+
 type Token interface {
 	Positioner
 	Lengther
@@ -68,4 +70,8 @@ func (t tok) Type() Type {
 
 func (t tok) Value() string {
 	return t.value
+}
+
+func (t tok) String() string {
+	return fmt.Sprintf("%s(%s)", t.typ.String(), t.value)
 }

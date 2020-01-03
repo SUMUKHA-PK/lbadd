@@ -9,11 +9,41 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[Unknown-0]
+	_ = x[Error-1]
+	_ = x[EOF-2]
+	_ = x[RegularIdentifier-3]
+	_ = x[KeyWord-4]
+	_ = x[UnsignedNumericLiteral-5]
+	_ = x[NationalCharacterStringLiteral-6]
+	_ = x[BinaryStringLiteral-7]
+	_ = x[LargeObjectLengthToken-8]
+	_ = x[UnicodeDelimitedIdentifier-9]
+	_ = x[UnicodeCharacterStringLiteral-10]
+	_ = x[SQLLanguageIdentifier-11]
+	_ = x[CharacterStringLiteral-12]
+	_ = x[DateString-13]
+	_ = x[TimeString-14]
+	_ = x[TimestampString-15]
+	_ = x[IntervalString-16]
+	_ = x[DelimitedIdentifier-17]
+	_ = x[SQLSpecialCharacter-18]
+	_ = x[NotEqualsOperator-19]
+	_ = x[GreaterThanOrEqualsOperator-20]
+	_ = x[LessThanOrEqualsOperator-21]
+	_ = x[ConcatenationOperator-22]
+	_ = x[RightArrow-23]
+	_ = x[LeftBracketTrigraph-24]
+	_ = x[RightBracketTrigraph-25]
+	_ = x[DoubleColon-26]
+	_ = x[DoublePeriod-27]
+	_ = x[NamedArgumentAssignmentToken-28]
+	_ = x[LeftBraceMinus-29]
+	_ = x[RightMinusBrace-30]
 }
 
-const _Type_name = "Unknown"
+const _Type_name = "UnknownErrorEOFRegularIdentifierKeyWordUnsignedNumericLiteralNationalCharacterStringLiteralBinaryStringLiteralLargeObjectLengthTokenUnicodeDelimitedIdentifierUnicodeCharacterStringLiteralSQLLanguageIdentifierCharacterStringLiteralDateStringTimeStringTimestampStringIntervalStringDelimitedIdentifierSQLSpecialCharacterNotEqualsOperatorGreaterThanOrEqualsOperatorLessThanOrEqualsOperatorConcatenationOperatorRightArrowLeftBracketTrigraphRightBracketTrigraphDoubleColonDoublePeriodNamedArgumentAssignmentTokenLeftBraceMinusRightMinusBrace"
 
-var _Type_index = [...]uint8{0, 7}
+var _Type_index = [...]uint16{0, 7, 12, 15, 32, 39, 61, 91, 110, 132, 158, 187, 208, 230, 240, 250, 265, 279, 298, 317, 334, 361, 385, 406, 416, 435, 455, 466, 478, 506, 520, 535}
 
 func (i Type) String() string {
 	if i >= Type(len(_Type_index)-1) {

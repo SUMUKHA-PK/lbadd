@@ -1,6 +1,17 @@
 package token
 
-type Stream struct {
+import "io"
+
+type Stream interface {
+	Peek() Token
+	Take() Token
+	Push(Token)
+
+	io.Closer
+	Closed() bool
+}
+
+type stream struct {
 	ch chan Token
 
 	peeked *Token
@@ -8,8 +19,8 @@ type Stream struct {
 	closed bool
 }
 
-func NewStream() *Stream {
-	return &Stream{
+func NewStream() Stream {
+	return &stream{
 		ch:     make(chan Token, 5),
 		peeked: nil,
 		closed: false,
@@ -19,7 +30,7 @@ func NewStream() *Stream {
 // Peek returns the first element of the stream, waiting for it to become
 // available if necessary. However, it does NOT remove the element from the
 // stream.
-func (s *Stream) Peek() Token {
+func (s *stream) Peek() Token {
 	s.ensureNotClosed()
 	if s.peeked != nil {
 		return *s.peeked
@@ -31,7 +42,7 @@ func (s *Stream) Peek() Token {
 
 // Take returns the first element of the stream, waiting for it to become
 // available if necessary. Take also removes the element from the stream.
-func (s *Stream) Take() Token {
+func (s *stream) Take() Token {
 	s.ensureNotClosed()
 	if s.peeked != nil {
 		t := *s.peeked
@@ -42,23 +53,23 @@ func (s *Stream) Take() Token {
 }
 
 // Push pushes a token onto the stream, waiting if the stream is full.
-func (s *Stream) Push(t Token) {
+func (s *stream) Push(t Token) {
 	s.ensureNotClosed()
 	s.ch <- t
 }
 
-func (s Stream) ensureNotClosed() {
+func (s stream) ensureNotClosed() {
 	if s.closed {
 		panic("token stream is closed")
 	}
 }
 
-func (s *Stream) Close() error {
+func (s *stream) Close() error {
 	s.closed = true
 	close(s.ch)
 	return nil
 }
 
-func (s Stream) Closed() bool {
+func (s stream) Closed() bool {
 	return s.closed
 }

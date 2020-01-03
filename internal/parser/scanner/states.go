@@ -34,11 +34,11 @@ func scanToken(s *Scanner) state {
 	case Digit.Matches(next):
 		// scanUnsignedNumericLiteral OR scanLargeObjectLengthToken
 	case Period.Matches(next):
-		return scanUnsignedNumericLiteral
+		// return scanUnsignedNumericLiteral
 	case s.peekString(`N"`):
-		return scanNationalCharacterStringLiteral
+		// return scanNationalCharacterStringLiteral
 	case s.peekString(`X"`):
-		return scanBinaryStringLiteral
+		// return scanBinaryStringLiteral
 	default:
 		// handle all cases that cannot be expressed by a switch statement
 
@@ -49,6 +49,8 @@ func scanToken(s *Scanner) state {
 			message: fmt.Sprintf("unexpected rune '%v' near offset %v (%v:%v)", next, s.pos, s.line, s.col),
 		})
 	}
+
+	panic("TODO")
 }
 
 func scanLeftBracketOrTrigraph(s *Scanner) state {
@@ -183,13 +185,11 @@ func scanDelimitedIdentifierPart(s *Scanner) state {
 }
 
 func scanDoubleQuoteSymbol(s *Scanner) state {
-	chck := s.checkpoint()
-	if s.accept(Quote) {
-		if s.accept(Quote) {
+	if s.accept(DoubleQuote) {
+		if s.accept(DoubleQuote) {
 			return nil
 		}
 	}
-	s.restore(chck)
 	return errorExpected(Quote)
 }
 
@@ -211,20 +211,20 @@ func scanUnicodeDelimitedIdentifier(s *Scanner) state {
 		return errorExpected(DoubleQuote)
 	}
 
-	if next := scanUnicodeDelimiterBody(s); next != nil {
-		s.restore(chck)
-		return next
-	}
+	// if next := scanUnicodeDelimiterBody(s); next != nil {
+	// 	s.restore(chck)
+	// 	return next
+	// }
 
 	if !s.accept(DoubleQuote) {
 		s.restore(chck)
 		return errorExpected(DoubleQuote)
 	}
 
-	if next := scanUnicodeEscapeSpecifier(s); next != nil {
-		s.restore(chck)
-		return next
-	}
+	// if next := scanUnicodeEscapeSpecifier(s); next != nil {
+	// 	s.restore(chck)
+	// 	return next
+	// }
 
 	return nil
 }
