@@ -100,7 +100,10 @@ func scanRegularIdentifier(s *Scanner) state {
 }
 
 func scanIdentifierBody(s *Scanner) state {
+	chck := s.checkpoint()
+
 	if !s.accept(IdentifierStart) {
+		s.restore(chck)
 		return errorExpected(IdentifierStart)
 	}
 
@@ -109,33 +112,119 @@ func scanIdentifierBody(s *Scanner) state {
 }
 
 func scanLargeObjectLengthToken(s *Scanner) state {
+	chck := s.checkpoint()
+
 	// at least one Digit
 	if s.acceptMultiple(Digit) == 0 {
+		s.restore(chck)
 		return errorExpected(Digit)
 	}
 	// exactly one multiplier
 	if !s.accept(Multiplier) {
+		s.restore(chck)
 		return errorExpected(Multiplier)
 	}
 	return nil
 }
 
 func scanDelimitedIdentifier(s *Scanner) state {
+	chck := s.checkpoint()
+
 	if !s.accept(Quote) {
+		s.restore(chck)
 		return errorExpected(Quote)
 	}
 
 	next := scanDelimitedIdentifierBody(s)
 	if next != nil {
+		s.restore(chck)
 		return next
 	}
 
 	if !s.accept(Quote) {
+		s.restore(chck)
 		return errorExpected(Quote)
 	}
 	return nil
 }
 
 func scanDelimitedIdentifierBody(s *Scanner) state {
+	chck := s.checkpoint()
+	atLeastOne := false
 
+	for {
+		next := scanDelimitedIdentifierPart(s)
+		if next != nil {
+			break
+		}
+		atLeastOne = true
+	}
+
+	if atLeastOne {
+		return nil
+	}
+
+	s.restore(chck)
+	return errorExpected("at least one DelimitedIdentifierPart")
+}
+
+func scanDelimitedIdentifierPart(s *Scanner) state {
+	if next := scanDoubleQuoteSymbol(s); next == nil {
+		return nil
+	}
+
+	// TODO: nondoublequote character, see
+	// https://github.com/tomarrell/lbadd/projects/4#card-31143787
+	if s.accept(SimpleLatinCharacter) {
+		return nil
+	}
+
+	return errorExpected("non DoubleQuote character (current implementation: SimpleLatinCharacter) or \"\"")
+}
+
+func scanDoubleQuoteSymbol(s *Scanner) state {
+	chck := s.checkpoint()
+	if s.accept(Quote) {
+		if s.accept(Quote) {
+			return nil
+		}
+	}
+	s.restore(chck)
+	return errorExpected(Quote)
+}
+
+func scanUnicodeDelimitedIdentifier(s *Scanner) state {
+	chck := s.checkpoint()
+
+	if !s.acceptString("U") {
+		s.restore(chck)
+		return errorExpected("U")
+	}
+
+	if !s.accept(Ampersand) {
+		s.restore(chck)
+		return errorExpected(Ampersand)
+	}
+
+	if !s.accept(DoubleQuote) {
+		s.restore(chck)
+		return errorExpected(DoubleQuote)
+	}
+
+	if next := scanUnicodeDelimiterBody(s); next != nil {
+		s.restore(chck)
+		return next
+	}
+
+	if !s.accept(DoubleQuote) {
+		s.restore(chck)
+		return errorExpected(DoubleQuote)
+	}
+
+	if next := scanUnicodeEscapeSpecifier(s); next != nil {
+		s.restore(chck)
+		return next
+	}
+
+	return nil
 }
