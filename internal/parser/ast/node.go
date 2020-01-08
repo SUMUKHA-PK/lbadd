@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/tomarrell/lbadd/internal/parser/scanner/token"
+
 type Node interface {
 	Positioner
 	Lengther
@@ -29,12 +31,23 @@ type Valuer interface {
 var _ Node = (*nodeInfo)(nil) // ensure nodeInfo implements Node
 
 type nodeInfo struct {
-	length int
 	line   int
 	col    int
 	offset int
+	length int
 	typ    NodeType
 	value  string
+}
+
+func NewNodeInfo(line, col, offset, length int, typ NodeType, value string) nodeInfo {
+	return nodeInfo{
+		line:   line,
+		col:    col,
+		offset: offset,
+		length: length,
+		typ:    typ,
+		value:  value,
+	}
 }
 
 func (i nodeInfo) Length() int {
@@ -63,4 +76,26 @@ func (i nodeInfo) Value() string {
 
 func (i nodeInfo) HasValue() bool {
 	return i.value != ""
+}
+
+var _ Node = (*tokenNode)(nil) // ensure nodeInfo implements Node
+
+type tokenNode struct {
+	token.Token
+	typ NodeType
+}
+
+func NewTokenNode(t token.Token, typ NodeType) tokenNode {
+	return tokenNode{
+		Token: t,
+		typ:   typ,
+	}
+}
+
+func (n tokenNode) Type() NodeType {
+	return n.typ
+}
+
+func (n tokenNode) HasValue() bool {
+	return n.Value() != ""
 }

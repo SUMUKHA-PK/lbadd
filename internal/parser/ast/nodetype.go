@@ -5,4 +5,5 @@ type NodeType uint16
 
 const (
 	Unknown NodeType = iota
+	Root
 )

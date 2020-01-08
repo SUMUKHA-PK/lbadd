@@ -53,6 +53,9 @@ type Scanner struct {
 
 	startLine, startCol int
 	line, lastCol, col  int
+
+	closed bool
+	doneCh chan struct{}
 }
 
 func New(input []rune, stream token.Stream) *Scanner {
@@ -69,6 +72,8 @@ func New(input []rune, stream token.Stream) *Scanner {
 		line:      1, // line starts at 1, because it should be human readable and editor line and column numbers usually start at 1
 		lastCol:   1,
 		col:       1, // col starts at 1, because it should be human readable and editor line and column numbers usually start at 1
+
+		doneCh: make(chan struct{}),
 	}
 }
 
@@ -94,6 +99,19 @@ func (s *Scanner) Scan() {
 			s.current = initial
 		}
 	}
+
+	close(s.doneCh)
+}
+
+func (s *Scanner) Done() <-chan struct{} {
+	return s.doneCh
+}
+
+// Close will cause this scanner to not execute any more states and emit an EOF
+// token.
+func (s *Scanner) Close() error {
+	s.closed = true
+	return nil
 }
 
 func (s *Scanner) executeCurrentState() {
@@ -101,7 +119,8 @@ func (s *Scanner) executeCurrentState() {
 }
 
 func (s *Scanner) done() bool {
-	return s.pos >= len(s.input)
+	return s.closed ||
+		s.pos >= len(s.input)
 }
 
 func (s *Scanner) next() rune {

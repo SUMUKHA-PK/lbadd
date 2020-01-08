@@ -9,11 +9,12 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[Unknown-0]
+	_ = x[Root-1]
 }
 
-const _NodeType_name = "Unknown"
+const _NodeType_name = "UnknownRoot"
 
-var _NodeType_index = [...]uint8{0, 7}
+var _NodeType_index = [...]uint8{0, 7, 11}
 
 func (i NodeType) String() string {
 	if i >= NodeType(len(_NodeType_index)-1) {
