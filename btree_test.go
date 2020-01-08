@@ -69,10 +69,10 @@ func TestGet(t *testing.T) {
 		{
 			name: "entry one level deep left of root",
 			root: &node{
-				entries: []*entry{{2, 2}},
+				entries: []*entry{{2, nil}},
 				children: []*node{
 					{entries: []*entry{{1, 1}}},
-					{entries: []*entry{{3, 3}}},
+					{entries: []*entry{{2, 2}, {3, 3}}},
 				},
 			},
 			key:            1,
@@ -81,10 +81,10 @@ func TestGet(t *testing.T) {
 		{
 			name: "entry one level deep right of root",
 			root: &node{
-				entries: []*entry{{2, 2}},
+				entries: []*entry{{2, nil}},
 				children: []*node{
 					{entries: []*entry{{1, 1}}},
-					{entries: []*entry{{3, 3}}},
+					{entries: []*entry{{2, 2}, {3, 3}}},
 				},
 			},
 			key:            3,
@@ -96,7 +96,7 @@ func TestGet(t *testing.T) {
 				entries: []*entry{{2, 2}},
 				children: []*node{
 					{entries: []*entry{{1, 1}}},
-					{entries: []*entry{{3, 3}}},
+					{entries: []*entry{{2, 2}, {3, 3}}},
 				},
 			},
 			key:            4,
@@ -105,12 +105,15 @@ func TestGet(t *testing.T) {
 		{
 			name: "depth = 3 found",
 			root: &node{
-				entries: []*entry{{2, 2}},
+				entries: []*entry{{2, nil}},
 				children: []*node{
 					{entries: []*entry{{1, 1}}},
 					{
-						entries:  []*entry{{3, 3}},
-						children: []*node{{}, {entries: []*entry{{4, 4}}}},
+						entries: []*entry{{3, nil}},
+						children: []*node{
+							{entries: []*entry{{2, 2}}},
+							{entries: []*entry{{3, 3}, {4, 4}}},
+						},
 					},
 				},
 			},
@@ -120,12 +123,15 @@ func TestGet(t *testing.T) {
 		{
 			name: "depth = 3 not found",
 			root: &node{
-				entries: []*entry{{2, 2}},
+				entries: []*entry{{2, nil}},
 				children: []*node{
 					{entries: []*entry{{1, 1}}},
 					{
-						entries:  []*entry{{3, 3}},
-						children: []*node{{}, {entries: []*entry{{4, 4}}}},
+						entries: []*entry{{3, nil}},
+						children: []*node{
+							{entries: []*entry{{2, 2}}},
+							{entries: []*entry{{3, 3}, {4, 4}}},
+						},
 					},
 				},
 			},
@@ -216,10 +222,10 @@ func TestNodeSplit(t *testing.T) {
 			input: &node{parent: parent, entries: []*entry{{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}}},
 			expected: &node{
 				parent:  parent,
-				entries: []*entry{{3, 3}},
+				entries: []*entry{{3, nil}},
 				children: []*node{
 					{entries: []*entry{{1, 1}, {2, 2}}},
-					{entries: []*entry{{4, 4}, {5, 5}}},
+					{entries: []*entry{{3, 3}, {4, 4}, {5, 5}}},
 				},
 			},
 		},
@@ -228,10 +234,10 @@ func TestNodeSplit(t *testing.T) {
 			input: &node{parent: parent, entries: []*entry{{1, 1}, {2, 2}, {3, 3}, {4, 4}}},
 			expected: &node{
 				parent:  parent,
-				entries: []*entry{{3, 3}},
+				entries: []*entry{{3, nil}},
 				children: []*node{
 					{entries: []*entry{{1, 1}, {2, 2}}},
-					{entries: []*entry{{4, 4}}},
+					{entries: []*entry{{3, 3}, {4, 4}}},
 				},
 			},
 		},
@@ -240,10 +246,10 @@ func TestNodeSplit(t *testing.T) {
 			input: &node{entries: []*entry{{1, 1}, {2, 2}, {3, 3}, {4, 4}, {5, 5}}},
 			root:  true,
 			expected: &node{
-				entries: []*entry{{3, 3}},
+				entries: []*entry{{3, nil}},
 				children: []*node{
 					{entries: []*entry{{1, 1}, {2, 2}}},
-					{entries: []*entry{{4, 4}, {5, 5}}},
+					{entries: []*entry{{3, 3}, {4, 4}, {5, 5}}},
 				},
 			},
 		},
@@ -261,7 +267,7 @@ func TestNodeSplit(t *testing.T) {
 			input: &node{parent: parent, entries: []*entry{{1, 1}}},
 			expected: &node{
 				parent:   parent,
-				entries:  []*entry{{1, 1}},
+				entries:  []*entry{{1, nil}},
 				children: []*node{},
 			},
 		},
@@ -294,8 +300,6 @@ func TestInsertNode(t *testing.T) {
 		entry *entry
 	}
 
-	order := 3
-
 	tests := []struct {
 		name         string
 		fields       fields
@@ -322,10 +326,26 @@ func TestInsertNode(t *testing.T) {
 			fields: fields{size: 2},
 			args: args{
 				&node{
-					entries: []*entry{{1, 1}},
+					entries: []*entry{{2, nil}},
+					children: []*node{
+						{entries: []*entry{{1, 1}}},
+						{entries: []*entry{{2, 2}}},
+					},
+				},
+				&entry{2, 2},
+			},
+			wantSize:     2,
+			wantInserted: false,
+		},
+		{
+			name:   "entry exists one level down right unbalanced",
+			fields: fields{size: 2},
+			args: args{
+				&node{
+					entries: []*entry{{1, nil}},
 					children: []*node{
 						{},
-						{entries: []*entry{{2, 2}}},
+						{entries: []*entry{{1, 1}, {2, 2}}},
 					},
 				},
 				&entry{2, 2},
@@ -338,10 +358,10 @@ func TestInsertNode(t *testing.T) {
 			fields: fields{size: 2},
 			args: args{
 				&node{
-					entries: []*entry{{2, 2}},
+					entries: []*entry{{2, nil}},
 					children: []*node{
 						{entries: []*entry{{1, 1}}},
-						{},
+						{entries: []*entry{{2, 2}}},
 					},
 				},
 				&entry{1, 1},
@@ -354,9 +374,9 @@ func TestInsertNode(t *testing.T) {
 			fields: fields{size: 2},
 			args: args{
 				&node{
-					entries: []*entry{{2, 2}},
+					entries: []*entry{{3, nil}},
 					children: []*node{
-						{},
+						{entries: []*entry{{1, 1}}},
 						{entries: []*entry{{3, 3}}},
 					},
 				},
@@ -367,18 +387,50 @@ func TestInsertNode(t *testing.T) {
 		},
 		{
 			name:   "entry inserted one level down left, would overflow",
-			fields: fields{size: 2},
+			fields: fields{size: 6},
 			args: args{
 				&node{
-					entries: []*entry{{10, 10}},
+					entries: []*entry{{10, nil}},
 					children: []*node{
-						{entries: []*entry{{3, 3}, {4, 4}, {5, 5}}},
-						{},
+						{entries: []*entry{{3, 3}, {4, 4}, {5, 5}, {6, 6}, {7, 7}}},
+						{entries: []*entry{{10, 10}}},
 					},
 				},
 				&entry{1, 1},
 			},
-			wantSize:     3,
+			wantSize:     7,
+			wantInserted: true,
+		},
+		{
+			name:   "entry inserted one level down right, would more than overflow",
+			fields: fields{size: 4},
+			args: args{
+				&node{
+					entries: []*entry{{10, nil}},
+					children: []*node{
+						{entries: []*entry{{3, 3}, {4, 4}, {5, 5}}},
+						{entries: []*entry{{10, 10}, {11, 11}, {12, 12}, {13, 13}, {14, 14}, {15, 15}, {16, 16}, {17, 17}, {18, 18}, {19, 19}, {29, 29}}},
+					},
+				},
+				&entry{30, 30},
+			},
+			wantSize:     5,
+			wantInserted: true,
+		},
+		{
+			name:   "entry inserted one level down right, would more than overflow",
+			fields: fields{size: 4},
+			args: args{
+				&node{
+					entries: []*entry{{10, nil}},
+					children: []*node{
+						{entries: []*entry{{3, 3}, {4, 4}, {5, 5}}},
+						{entries: []*entry{{10, 10}, {11, 11}, {12, 12}, {13, 13}, {14, 14}, {15, 15}, {16, 16}, {17, 17}, {18, 18}, {19, 19}, {29, 29}}},
+					},
+				},
+				&entry{30, 30},
+			},
+			wantSize:     5,
 			wantInserted: true,
 		},
 	}
@@ -388,7 +440,7 @@ func TestInsertNode(t *testing.T) {
 			b := &btree{
 				root:  tt.fields.root,
 				size:  tt.fields.size,
-				order: order,
+				order: 3,
 			}
 
 			got := b.insertNode(tt.args.node, tt.args.entry)
@@ -616,6 +668,76 @@ func TestNode_canSteal(t *testing.T) {
 			}
 
 			got := n.canSteal(tt.args.order)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func Test_btree_getAll(t *testing.T) {
+	type fields struct {
+		root  *node
+		size  int
+		order int
+	}
+	type args struct {
+		limit int
+	}
+
+	root := &node{}
+	root.entries = []*entry{{4, 4}, {8, 8}}
+	root.children = []*node{
+		{
+			parent:  root,
+			entries: []*entry{{0, 0}, {1, 1}, {2, 2}},
+		},
+		{
+			parent:  root,
+			entries: []*entry{{5, 5}, {7, 7}},
+		},
+		{
+			parent:  root,
+			entries: []*entry{{9, 9}, {11, 11}, {12, 12}},
+		},
+	}
+
+	f := fields{root: root, size: 10}
+
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   []*entry
+	}{
+		{
+			name:   "empty tree returns empty entries",
+			fields: fields{size: 0},
+			args:   args{limit: 10},
+			want:   []*entry{},
+		},
+		{
+			name:   "limit of 0 returns empty entries",
+			fields: f,
+			args:   args{limit: 0},
+			want:   []*entry{},
+		},
+		{
+			name:   "returns all entries up to limit",
+			fields: f,
+			args:   args{limit: 0},
+			want:   []*entry{},
+		},
+		// TODO add more cases
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			b := &btree{
+				root:  tt.fields.root,
+				size:  tt.fields.size,
+				order: tt.fields.order,
+			}
+
+			got := b.getAll(tt.args.limit)
 			assert.Equal(t, tt.want, got)
 		})
 	}
