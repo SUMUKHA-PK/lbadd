@@ -86,9 +86,9 @@ type (
 	NumericValueExpression struct {
 		Node
 
-		NumericValueExpression
-		PlusSignOrMinusSign token.Token
-		Term                *Term
+		NumericValueExpression *NumericValueExpression
+		PlusSignOrMinusSign    token.Token
+		Term                   *Term
 	}
 
 	Term struct {
@@ -1138,5 +1138,305 @@ type (
 		LeftParen          token.Token
 		TimestampPrecision *TimestampPrecision
 		RightParen         token.Token
+	}
+)
+
+// 6.37 interval value expression
+type (
+	IntervalValueExpression struct {
+		Node
+
+		IntervalTerm             *IntervalTerm
+		IntervalValueExpression1 *IntervalValueExpression
+		PlusSignOrMinusSign      token.Token
+		IntervalTerm1            *IntervalTerm
+		LeftParen                token.Token
+		DatetimeValueExpression  *DatetimeValueExpression
+		DatetimeTerm             *DatetimeTerm
+		RightParen               token.Token
+		IntervalQualifier        *IntervalQualifier
+	}
+
+	IntervalTerm struct {
+		Node
+
+		IntervalFactor    *IntervalFactor
+		IntervalTerm2     *IntervalTerm2
+		AsteriskOrSolidus token.Token
+		Factor            *Factor
+		Term              *Term
+	}
+
+	IntervalFactor struct {
+		Node
+
+		Sign            token.Token
+		IntervalPrimary *IntervalPrimary
+	}
+
+	IntervalPrimary struct {
+		Node
+
+		ValueExpressionPrimary  *ValueExpressionPrimary
+		IntervalQualifier       *IntervalQualifier
+		IntervalValueExpression *IntervalValueExpression
+	}
+)
+
+// 6.38 interval value function
+type (
+	IntervalValueFunction struct {
+		Node
+
+		IntervalAbsoluteValueFunction *IntervalAbsoluteValueFunction
+	}
+
+	IntervalAbsoluteValueFunction struct {
+		Node
+
+		Abs                     token.Token
+		LeftParen               token.Token
+		IntervalValueExpression *IntervalValueExpression
+		RightParen              token.Token
+	}
+)
+
+// 6.39 boolean value expression
+type (
+	BooleanValueExpression struct {
+		Node
+
+		BooleanValueExpression *BooleanValueExpression
+		Or                     token.Token
+		BooleanTerm            *BooleanTerm
+	}
+
+	BooleanTerm struct {
+		Node
+
+		BooleanTerm   *BooleanTerm
+		And           token.Token
+		BooleanFactor *BooleanFactor
+	}
+
+	BooleanFactor struct {
+		Node
+
+		Not         token.Token
+		BooleanTest *BooleanTest
+	}
+
+	BooleanTest struct {
+		Node
+
+		BooleanPrimary *BooleanPrimary
+		Is             token.Token
+		Not            token.Token
+		TruthValue     *TruthValue
+	}
+
+	TruthValue struct {
+		Node
+
+		TrueOrFalseOrUnknokwn token.Token
+	}
+
+	BooleanPrimary struct {
+		Node
+
+		Predicate        *Predicate
+		BooleanPredicand *BooleanPredicand
+	}
+
+	BooleanPredicand struct {
+		Node
+
+		ParenthesizedBooleanValueExpression    *ParenthesizedBooleanValueExpression
+		NonparenthesizedValueExpressionPrimary *NonparenthesizedValueExpressionPrimary
+	}
+
+	ParenthesizedBooleanValueExpression struct {
+		Node
+
+		LeftParen              token.Token
+		BooleanValueExpression *BooleanValueExpression
+		RightParen             token.Token
+	}
+)
+
+// 6.40 array value expression
+type (
+	ArrayValueExpression struct {
+		Node
+
+		ArrayConcatenation *ArrayConcatenation
+		ArrayPrimary       *ArrayPrimary
+	}
+
+	ArrayConcatenation struct {
+		Node
+
+		ArrayValueExpression1 *ArrayValueExpression
+		ConcatenationOperator *ConcatenationOperator
+		ArrayPrimary          *ArrayPrimary
+	}
+
+	ArrayPrimary struct {
+		Node
+
+		ArrayValueFunction     *ArrayValueFunction
+		ValueExpressionPrimary *ValueExpressionPrimary
+	}
+)
+
+// 6.41 array value function
+type (
+	ArrayValueFunction struct {
+		Node
+
+		TrimArrayFunction *TrimArrayFunction
+	}
+
+	TrimArrayFunction struct {
+		Node
+
+		TrimArray              token.Token
+		LeftParen              token.Token
+		ArrayValueExpression   *ArrayValueExpression
+		Comma                  token.Token
+		NumericValueExpression *NumericValueExpression
+		RightParen             token.Token
+	}
+)
+
+// 6.42 array value constructor
+type (
+	ArrayValueConstructor struct {
+		Node
+
+		ArrayValueConstructorByEnumeration *ArrayValueConstructorByEnumeration
+		ArrayValueConstructorByQuery       *ArrayValueConstructorByQuery
+	}
+
+	ArrayValueConstructorByEnumeration struct {
+		Node
+
+		Array                  token.Token
+		LeftBracketOrTrigraph  token.Token
+		ArrayElementList       *ArrayElementList
+		RightBracketOrTrigraph token.Token
+	}
+
+	ArrayElementList struct {
+		Node
+
+		ArrayElement []*ArrayElement
+	}
+
+	ArrayElement struct {
+		Node
+
+		ValueExpression *ValueExpression
+	}
+
+	ArrayValueConstructorByQuery struct {
+		Node
+
+		Array         token.Token
+		TableSubquery *TableSubquery
+	}
+)
+
+// 6.43 multiset value expression
+type (
+	MultisetValueExpression struct {
+		Node
+
+		MultisetValueExpression *MultisetValueExpression
+		Multiset                token.Token
+		UnionOrExcept           token.Token
+		AllOrDistinct           token.Token
+		MultisetTerm            *MultisetTerm
+	}
+
+	MultisetTerm struct {
+		Node
+
+		MultisetTerm    *MultisetTerm
+		Multiset        token.Token
+		Intersect       token.Token
+		AllOrDistinct   token.Token
+		MultisetPrimary *MultisetPrimary
+	}
+
+	MultisetPrimary struct {
+		Node
+
+		MultisetValueFunction  *MultisetValueFunction
+		ValueExpressionPrimary *ValueExpressionPrimary
+	}
+)
+
+// 6.44 multiset value function
+type (
+	MultisetValueFucntion struct {
+		Node
+
+		MultisetSetFunction *MultisetSetFunction
+	}
+
+	MultisetSetFunction struct {
+		Node
+
+		Set                     token.Token
+		LeftParen               token.Token
+		MultisetValueExpression *MultisetValueExpression
+		RightParen              token.Token
+	}
+)
+
+// 6.45 multiset value constructor
+type (
+	MultisetValueConstrutor struct {
+		Node
+
+		MultisetValueConstructorByEnumeration *MultisetValueConstructorByEnumeration
+		MultisetValueConstrutorByQuery        *MultisetValueConstrutorByQuery
+		TableValueConstructorByQuery          *TableValueConstructorByQuery
+	}
+
+	MultisetValueConstructorByEnumeration struct {
+		Node
+
+		Multiset               token.Token
+		LeftBracketOrTrigraph  token.Token
+		MultisetElementList    *MultisetElementList
+		RightBracketOrTrigraph token.Token
+	}
+
+	MultisetElementList struct {
+		Node
+
+		MultisetElement []*MultisetElement
+	}
+
+	MultisetElement struct {
+		Node
+
+		ValueExpression *ValueExpression
+	}
+
+	MultisetValueConstrutorByQuery struct {
+		Node
+
+		Multiset      token.Token
+		TableSubquery *TableSubquery
+	}
+
+	TableValueConstructorByQuery struct {
+		Node
+
+		Table         token.Token
+		TableSubquery *TableSubquery
 	}
 )
