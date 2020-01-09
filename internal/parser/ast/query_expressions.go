@@ -317,4 +317,192 @@ type (
 		TransitionTableName *TransitionTableName
 		QueryName           *QueryName
 	}
+
+	DerivedColumnList struct {
+		Node
+
+		ColumnNameList *ColumnNameList
+	}
+
+	ColumnNameList struct {
+		Node
+
+		ColumnName []*ColumnName
+	}
+
+	DataChangeDeltaTable struct {
+		Node
+
+		ResultOption        *ResultOption
+		Table               token.Token
+		LeftParen           token.Token
+		DataChangeStatement *DataChangeStatement
+		RightParen          token.Token
+	}
+
+	DataChangeStatement struct {
+		Node
+
+		DeleteStatementSearched *DeleteStatementSearched
+		InsertStatement         *InsertStatement
+		MergeStatement          *MergeStatement
+		UpdateStatementSearched *UpdateStatementSearched
+	}
+
+	ResultOption struct {
+		Node
+
+		FinalOrNewOrOld token.Token
+	}
+
+	ParenthesizedJoinedTable struct {
+		Node
+
+		LeftParen                token.Token
+		ParenthesizedJoinedTable *ParenthesizedJoinedTable
+		JoinedTable              *JoinedTable
+		RightParen               token.Token
+	}
+
+	RowPatternRecognitionClauseAndName struct {
+		Node
+
+		As1                               token.Token
+		RowPatternInputName               *RowPatternInputName
+		RowPatternInputDerivedColumnList  *RowPatternInputDerivedColumnList
+		RowPatternRecognitionClause       *RowPatternRecognitionClause
+		As2                               token.Token
+		RowPatternOutputName              *RowPatternOutputName
+		RowPatternOutputDerivedColumnList *RowPatternOutputDerivedColumnList
+	}
+
+	RowPatternInputName struct {
+		Node
+
+		CorrelationName *CorrelationName
+	}
+
+	RowPatternOutputName struct {
+		Node
+
+		CorrelationName *CorrelationName
+	}
+
+	RowPatternInputDerivedColumnList struct {
+		Node
+
+		ParenthesizedDerivedColumnList *ParenthesizedDerivedColumnList
+	}
+
+	RowPatternOutputDerivedColumnList struct {
+		Node
+
+		ParenthesizedDerivedColumnList *ParenthesizedDerivedColumnList
+	}
+
+	ParenthesizedDerivedColumnList struct {
+		Node
+
+		LeftParen         token.Token
+		DerivedColumnList *DerivedColumnList
+		RightParen        token.Token
+	}
+)
+
+// 7.7 row pattern recognition clause
+type (
+	RowPatternRecognitionClause struct {
+		Node
+
+		MatchRecognize         token.Token
+		LeftParen              token.Token
+		RowPatternPartitionBy  *RowPatternPartitionBy
+		RowPatternOrderBy      *RowPatternOrderBy
+		RowPatternMeasures     *RowPatternMeasures
+		RowPatternRowsPerMatch *RowPatternRowsPerMatch
+		RowPatternCommonSyntax *RowPatternCommonSyntax
+		RightParen             token.Token
+	}
+
+	RowPatternPartitionBy struct {
+		Node
+
+		Partition               token.Token
+		By                      token.Token
+		RowPatternPartitionList *RowPatternPartitionList
+	}
+
+	RowPatternPartitionList struct {
+		Node
+
+		RowPatternPartitionColumn []*RowPatternPartitionColumn
+	}
+
+	RowPatternPartitionColumn struct {
+		Node
+
+		ColumnReference *ColumnReference
+		CollateClause   *CollateClause
+	}
+
+	RowPatternOrderBy struct {
+		Node
+
+		Order                 token.Token
+		By                    token.Token
+		SortSpecificationList *SortSpecificationList
+	}
+
+	RowPatternRowsPerMatch struct {
+		Node
+
+		One                          token.Token
+		Row                          token.Token
+		All                          token.Token
+		Rows                         token.Token
+		Per                          token.Token
+		Match                        token.Token
+		RowPatternEmptyMatchHandling *RowPatternEmptyMatchHandling
+	}
+
+	RowPatternEmptyMatchHandling struct {
+		Node
+
+		ShowOrOmit token.Token
+		Empty      token.Token
+		Matches    token.Token
+		With       token.Token
+		Unmatched  token.Token
+		Rows       token.Token
+	}
+)
+
+// 7.8 row pattern measures
+type (
+	RowPatternMeasures struct {
+		Node
+
+		Measures              token.Token
+		RowPatternMeasureList *RowPatternMeasureList
+	}
+
+	RowPatternMeasureList struct {
+		Node
+
+		RowPatternMeasureDefinition []*RowPatternMeasureDefinition
+	}
+
+	RowPatternMeasureDefinition struct {
+		Node
+
+		RowPatternMeasureExpression *RowPatternMeasureExpression
+		As                          token.Token
+		MeasureName                 *MeasureName
+	}
+
+	RowPatternMeasureExpression struct {
+		Node
+
+		ValueExpression *ValueExpression
+	}
 )

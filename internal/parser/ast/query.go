@@ -89,12 +89,6 @@ type (
 		Node
 	}
 
-	ColumnNameList struct {
-		Node
-
-		ColumnName []*ColumnName
-	}
-
 	ColumnName struct {
 		Node
 
