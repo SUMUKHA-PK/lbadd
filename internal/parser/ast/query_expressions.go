@@ -506,3 +506,143 @@ type (
 		ValueExpression *ValueExpression
 	}
 )
+
+// 7.9 row pattern common syntax
+type (
+	RowPatternCommonSyntax struct {
+		Node
+
+		After                    token.Token
+		Match                    token.Token
+		RowPatternSkipTo         *RowPatternSkipTo
+		RowPatternInitialOrSeek  *RowPatternInitialOrSeek
+		Pattern                  token.Token
+		LeftParen                token.Token
+		RowPattern               *RowPattern
+		RightParen               token.Token
+		RowPatternSubsetClause   *RowPatternSubsetClause
+		Definex                  token.Token
+		RowPatternDefinitionList *RowPatternDefinitionList
+	}
+
+	RowPatternSkipTo struct {
+		Node
+
+		Skip                         token.Token
+		To                           token.Token
+		Past                         token.Token
+		Next                         token.Token
+		Last                         token.Token
+		First                        token.Token
+		Row                          token.Token
+		RowPatternSkipToVariableName *RowPatternSkipToVariableName
+	}
+
+	RowPatternSkipToVariableName struct {
+		Node
+
+		RowPatternVariableName *RowPatternVariableName
+	}
+
+	RowPatternInitialOrSeek struct {
+		Node
+
+		InitialOrSeek token.Token
+	}
+
+	RowPattern struct {
+		Node
+
+		RowPatternTerm        *RowPatternTerm
+		RowPatternAlternation *RowPatternAlternation
+	}
+
+	RowPatternAlternation struct {
+		Node
+
+		RowPattern     *RowPattern
+		VerticalBar    token.Token
+		RowPatternTerm *RowPatternTerm
+	}
+
+	RowPatternTerm struct {
+		Node
+
+		RowPatternTerm   *RowPatternTerm
+		RowPatternFactor *RowPatternFactor
+	}
+
+	RowPatternFactor struct {
+		Node
+
+		RowPatternPrimary    *RowPatternPrimary
+		RowPatternQuantifier *RowPatternQuantifier
+	}
+
+	RowPatternQuantifier struct {
+		Node
+
+		Asterisk             token.Token
+		PlusSign             token.Token
+		QuestionMark1        token.Token
+		LeftBrace            token.Token
+		UnsignedInteger1     *UnsignedInteger
+		Comma                token.Token
+		UnsignedInteger2     *UnsignedInteger
+		RightBrace           token.Token
+		QuestionMarkTrailing token.Token
+	}
+
+	RowPatternPrimary struct {
+		Node
+
+		RowPatternPrimaryVariableName *RowPatternPrimaryVariableName
+		DollarSign                    token.Token
+		Circumflex                    token.Token
+		LeftParen                     token.Token
+		RowPattern                    *RowPattern
+		RightParen                    token.Token
+		LeftBraceMinus                token.Token
+		RowPattern                    *RowPattern
+		RightMinusBrace               token.Token
+		RowPatternPermute             *RowPatternPermute
+	}
+
+	RowPatternPrimaryVariableName struct {
+		Node
+
+		RowPatternVariableName *RowPatternVariableName
+	}
+
+	RowPatternPermute struct {
+		Node
+
+		Permute    token.Token
+		LeftParen  token.Token
+		RowPattern []*RowPattern
+		RightParen token.Token
+	}
+
+	RowPatternSubsetClause struct {
+		Node
+
+		Subset               token.Token
+		RowPatternSubsetList *RowPatternSubsetList
+	}
+
+	RowPatternSubsetList struct {
+		Node
+
+		RowPatternSubsetItem []*RowPatternSubsetItem
+	}
+
+	RowPatternSubsetItem struct {
+		Node
+
+		RowPatternSubsetItemVariableName *RowPatternSubsetItemVariableName
+		EqualsOperator                   token.Token
+		LeftParen                        token.Token
+		RowPatternSubsetRhs              *RowPatternSubsetRhs
+		RightParen                       token.Token
+	}
+)
